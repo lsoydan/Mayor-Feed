@@ -327,9 +327,6 @@
   <script>
     // Main feed source
     const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
-    
-    // AI feed source
-    const AI_FEED_ID = "_BYur6c5hBP77bPIs";
 
     // Categories
     const FEED_MAP = {
@@ -357,6 +354,7 @@
     ];
 
     let dropdownInitialized = false;
+    let currentFeedContent = ""; // NEW: Stores current feed text for the AI
 
     function toggleLanguage() {
       const isSpanish = document.getElementById('langToggle').checked;
@@ -372,36 +370,39 @@
       document.getElementById('ai-summary-box').style.display = 'none';
     }
 
+    // NEW: Dynamic AI Fetch Function
     async function fetchAISummary() {
       const summaryBox = document.getElementById('ai-summary-box');
       const btn = document.getElementById('aiSummaryBtn');
       
-      btn.innerHTML = "⏳ Generating...";
+      btn.innerHTML = "⏳ Reading the news...";
       btn.disabled = true;
       summaryBox.style.display = "none";
       
-      // Structure the header with the close button
       const headerHTML = `
         <div class="ai-summary-header">
-          <h3>✨ AI Daily Briefing</h3>
+          <h3>✨ AI Feed Summary</h3>
           <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
         </div>
       `;
       
       try {
-        const response = await fetch(`https://rss.app/feeds/v1.1/${AI_FEED_ID}.json`);
+        // Send the feed text to your secure middleman server
+        const response = await fetch('YOUR_SECURE_API_ENDPOINT_HERE', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newsData: currentFeedContent })
+        });
+        
         const data = await response.json();
         
-        if (data.items && data.items.length > 0) {
-          const summaryText = data.items[0].content_html || data.items[0].content_text || "No summary available.";
-          summaryBox.innerHTML = `${headerHTML}<div>${summaryText}</div>`;
-          summaryBox.style.display = "block";
-        } else {
-          summaryBox.innerHTML = `${headerHTML}<p><em>No AI summary available at this time. Check your RSS.app feed settings.</em></p>`;
-          summaryBox.style.display = "block";
-        }
+        // Assuming your backend returns a JSON object like: { "summary": "Here is the news..." }
+        const summaryText = data.summary || "No summary could be generated.";
+        
+        summaryBox.innerHTML = `${headerHTML}<div>${summaryText}</div>`;
+        summaryBox.style.display = "block";
       } catch (error) {
-        summaryBox.innerHTML = `${headerHTML}<div style="color:red; text-align:center;">Error fetching the AI summary. Please try again later.</div>`;
+        summaryBox.innerHTML = `${headerHTML}<div style="color:red; text-align:center;">Error connecting to the AI endpoint. Check your server settings.</div>`;
         summaryBox.style.display = "block";
       }
       
@@ -413,18 +414,14 @@
       const status = document.getElementById('status-msg');
       const feedId = FEED_MAP[selectedAuthor] || FEED_MAP["All News"];
       
-      // --- NEW LOGIC: Hide/Show AI Features based on filter ---
+      // --- SHOW AI FEATURES ON ALL PAGES ---
       const aiBtn = document.getElementById('aiSummaryBtn');
       const aiBox = document.getElementById('ai-summary-box');
       if (aiBtn && aiBox) {
-        if (selectedAuthor === "All News") {
-          aiBtn.style.display = "flex"; // Show the button
-        } else {
-          aiBtn.style.display = "none"; // Hide the button
-          aiBox.style.display = "none"; // Auto-close the summary box if they switch views
-        }
+        aiBtn.style.display = "flex"; // Keep the button visible on all feeds
+        aiBox.style.display = "none"; // Auto-close the summary box when they switch views
       }
-      // --------------------------------------------------------
+      // -------------------------------------
 
       if (!feedId) {
         status.innerText = `Feed for ${selectedAuthor} is not yet configured.`;
@@ -474,6 +471,13 @@
     function distributePosts(posts) {
       const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
       cols.forEach(c => c.innerHTML = "");
+
+      // NEW: Grab the top 10 posts, strip out heavy HTML, and save them for the AI
+      currentFeedContent = posts.slice(0, 10).map(post => {
+         const author = (post.authors && post.authors[0]) ? post.authors[0].name : 'Unknown';
+         const text = post.content_text ? post.content_text.substring(0, 250) : '';
+         return `Source: ${author}\nHeadline: ${post.title}\nDetails: ${text}...`;
+      }).join('\n\n---\n\n');
 
       let visibleCount = 0;
       posts.forEach((post) => {
