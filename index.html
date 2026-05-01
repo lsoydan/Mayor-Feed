@@ -388,7 +388,7 @@
       
       try {
         // Send the feed text to your secure middleman server
-        const response = await fetch('YOUR_SECURE_API_ENDPOINT_HERE', {
+        const response = await fetch('https://mayor-ai-briefing.aedwards-5db.workers.dev', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ newsData: currentFeedContent })
