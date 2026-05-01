@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mayor's News Feed</title>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+    }
+
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 20px;
+      top: 0 !important;
+    }
+
+    .goog-te-banner-frame.skiptranslate,
+    .goog-te-gadget span,
+    .goog-logo-link {
+      display: none !important;
+    }
+
+    .goog-te-gadget {
+      color: transparent !important;
+    }
+
+    #google_translate_element {
+      position: absolute;
+      top: -9999px;
+    }
+
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 30px auto;
+      text-align: center;
+    }
+
+    .language-controls {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 22px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(22px);
+    }
+
+    .filter-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+    }
+
+    #searchBar,
+    #authorFilter {
+      padding: 12px 20px;
+      font-size: 15px;
+      border: 1px solid #cbd5e1;
+      border-radius: 30px;
+      outline: none;
+      background: white;
+      box-sizing: border-box;
+    }
+
+    #searchBar {
+      flex: 2;
+      min-width: 280px;
+    }
+
+    #authorFilter {
+      flex: 1;
+      min-width: 200px;
+      cursor: pointer;
+    }
+
+    /* AI Button & Summary Box Styles */
+    #aiSummaryBtn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #aiSummaryBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    #aiSummaryBtn:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .ai-summary-box {
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+      padding: 24px;
+      background: #ffffff;
+      border: 2px solid #8b5cf6;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #334155;
+      display: none;
+      text-align: left;
+    }
+
+    .ai-summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .ai-summary-box h3 {
+      margin: 0;
+      color: #4f46e5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .ai-close-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .feed-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .post-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .post-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      background-color: #eee;
+    }
+
+    .post-content {
+      padding: 20px;
+    }
+
+    .post-card p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0;
+      color: #334155;
+    }
+
+    .post-author {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px 18px 20px;
+      font-size: 0.75rem;
+      color: #64748b;
+      font-style: italic;
+    }
+
+    #status-msg {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 15px; }
+      .header h1 { font-size: 1.5rem; }
+      .column { min-width: 100%; }
+      .post-content { padding: 15px; }
+      .post-author { padding: 0 15px 15px 15px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="google_translate_element"></div>
+
+  <div class="header">
+    <h1>Mayor's News Feed</h1>
+
+    <div class="language-controls">
+      <span>ENGLISH</span>
+      <label class="switch">
+        <input type="checkbox" id="langToggle" onchange="toggleLanguage()">
+        <span class="slider"></span>
+      </label>
+      <span>ESPAÑOL</span>
+    </div>
+
+    <div class="filter-controls">
+      <input type="text" id="searchBar" placeholder="Search news..." onkeyup="applyFilters()">
+      <select id="authorFilter" onchange="handleAuthorChange()"></select>
+      
+      <button id="aiSummaryBtn" onclick="fetchAISummary()">✨ Get AI Briefing</button>
+    </div>
+
+    <div id="ai-summary-box" class="ai-summary-box"></div>
+  </div>
+
+  <div id="status-msg">Initializing news feed...</div>
+
+  <div id="news-wall" class="feed-container">
+    <div class="column" id="col-1"></div>
+    <div class="column" id="col-2"></div>
+    <div class="column" id="col-3"></div>
+  </div>
+
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,es',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <script>
+    // Main feed source
+    const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
+    
+    // AI feed source
+    const AI_FEED_ID = "_BYur6c5hBP77bPIs";
+
+    // Categories
+    const FEED_MAP = {
+      "All News": MAIN_FEED_ID,
+      "Innovation": "_0ADB6njzx3sw9LyS", 
+      "City Social Media": "_KxzixUygzbdzu5KA",
+      "City Updates": "LTs3Zw710ixkkYP7",
+      "Local Government": "_Bh3ttARfh8MqDS8G",
+      "Local Orgs": "_HBdbLaXs1Is9iYiz",
+      "City Council": "_qJBzJHUiKp4cWvVc",
+      "Boards & Commissions": "_klPSjjaTN6sIeWKD",
+      "Local News": "_4BQAEpcspmOwUWSz"
+    };
+
+    const CATEGORY_LIST = [
+      "All News", 
+      "Boards & Commissions",
+      "City Council",
+      "City Social Media", 
+      "City Updates",
+      "Innovation", 
+      "Local Government", 
+      "Local News",
+      "Local Orgs"
+    ];
+
+    let dropdownInitialized = false;
+
+    function toggleLanguage() {
+      const isSpanish = document.getElementById('langToggle').checked;
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = isSpanish ? 'es' : 'en';
+        combo.dispatchEvent(new Event('change'));
+      }
+    }
+
+    // Function to close/minimize the AI Summary
+    function closeAISummary() {
+      document.getElementById('ai-summary-box').style.display = 'none';
+    }
+
+    async function fetchAISummary() {
+      const summaryBox = document.getElementById('ai-summary-box');
+      const btn = document.getElementById('aiSummaryBtn');
+      
+      btn.innerHTML = "⏳ Generating...";
+      btn.disabled = true;
+      summaryBox.style.display = "none";
+      
+      // Structure the header with the close button
+      const headerHTML = `
+        <div class="ai-summary-header">
+          <h3>✨ AI Daily Briefing</h3>
+          <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
+        </div>
+      `;
+      
+      try {
+        const response = await fetch(`https://rss.app/feeds/v1.1/${AI_FEED_ID}.json`);
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0) {
+          const summaryText = data.items[0].content_html || data.items[0].content_text || "No summary available.";
+          summaryBox.innerHTML = `${headerHTML}<div>${summaryText}</div>`;
+          summaryBox.style.display = "block";
+        } else {
+          summaryBox.innerHTML = `${headerHTML}<p><em>No AI summary available at this time. Check your RSS.app feed settings.</em></p>`;
+          summaryBox.style.display = "block";
+        }
+      } catch (error) {
+        summaryBox.innerHTML = `${headerHTML}<div style="color:red; text-align:center;">Error fetching the AI summary. Please try again later.</div>`;
+        summaryBox.style.display = "block";
+      }
+      
+      btn.innerHTML = "✨ Get AI Briefing";
+      btn.disabled = false;
+    }
+
+    async function loadNews(selectedAuthor = "All News") {
+      const status = document.getElementById('status-msg');
+      const feedId = FEED_MAP[selectedAuthor] || FEED_MAP["All News"];
+      
+      // --- NEW LOGIC: Hide/Show AI Features based on filter ---
+      const aiBtn = document.getElementById('aiSummaryBtn');
+      const aiBox = document.getElementById('ai-summary-box');
+      if (aiBtn && aiBox) {
+        if (selectedAuthor === "All News") {
+          aiBtn.style.display = "flex"; // Show the button
+        } else {
+          aiBtn.style.display = "none"; // Hide the button
+          aiBox.style.display = "none"; // Auto-close the summary box if they switch views
+        }
+      }
+      // --------------------------------------------------------
+
+      if (!feedId) {
+        status.innerText = `Feed for ${selectedAuthor} is not yet configured.`;
+        const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
+        cols.forEach(c => c.innerHTML = "");
+        return;
+      }
+
+      const fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
+
+      try {
+        status.style.display = 'block';
+        status.innerText = `Updating feed...`;
+        const response = await fetch(fetchUrl);
+        const data = await response.json();
+        
+        if (!data.items || data.items.length === 0) {
+          status.innerText = "No announcements found.";
+          return;
+        }
+
+        data.items.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
+
+        if (!dropdownInitialized) {
+          populateDropdown();
+        }
+
+        status.style.display = 'none';
+        distributePosts(data.items);
+      } catch (err) {
+        status.innerHTML = `<div style="color:red;">Error loading news.</div>`;
+      }
+    }
+
+    function populateDropdown() {
+      const filter = document.getElementById('authorFilter');
+      filter.innerHTML = '';
+      CATEGORY_LIST.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        filter.appendChild(option);
+      });
+      dropdownInitialized = true;
+    }
+
+    function distributePosts(posts) {
+      const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
+      cols.forEach(c => c.innerHTML = "");
+
+      let visibleCount = 0;
+      posts.forEach((post) => {
+        let imageSrc = post.image || post.thumbnail;
+        if (!imageSrc && post.attachments && post.attachments[0]) imageSrc = post.attachments[0].url;
+        if (!imageSrc && post.description_html && post.description_html.includes('<img')) {
+          const match = post.description_html.match(/<img[^>]+src="([^">]+)"/);
+          if (match) imageSrc = match[1];
+        }
+
+        const rawText = (post.content_text || "").trim();
+        
+        let sourceName = (post.authors && post.authors[0]) ? post.authors[0].name : "City News";
+
+        let pubDate = "";
+        if (post.date_published) {
+          const d = new Date(post.date_published);
+          pubDate = d.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric'
+          });
+        }
+
+        const imgTag = imageSrc ? `<img src="${imageSrc}" class="post-image" onerror="this.parentElement.removeChild(this)">` : '';
+        const cleanText = rawText.length > 400 ? rawText.substring(0, 400) + "..." : rawText;
+        const textTag = cleanText ? `<div class="post-content"><p>${cleanText}</p></div>` : '';
+        const authorTag = `<span class="post-author"><span>${pubDate}</span><span>${sourceName}</span></span>`;
+
+        const cardHtml = `<a href="${post.url}" class="post-card" target="_blank">${imgTag}${textTag}${authorTag}</a>`;
+        
+        cols[visibleCount % 3].insertAdjacentHTML('beforeend', cardHtml);
+        visibleCount++;
+      });
+    }
+
+    function handleAuthorChange() {
+      const selectedAuthor = document.getElementById('authorFilter').value;
+      loadNews(selectedAuthor);
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('searchBar').value.toLowerCase();
+      document.querySelectorAll('.post-card').forEach(card => {
+        const matches = card.innerText.toLowerCase().includes(query);
+        card.style.display = matches ? "block" : "none";
+      });
+    }
+
+    loadNews("All News");
+  </script>
+</body>
+
+</html>
