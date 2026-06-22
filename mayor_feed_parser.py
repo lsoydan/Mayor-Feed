@@ -3,8 +3,8 @@ import json
 import requests
 from openai import OpenAI
 
-# Initialize OpenAI Client (Pulls from GitHub Repository Secret)
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Initialize OpenAI Client (Pulls seamlessly from your GitHub Secrets)
+client = OpenAI()
 
 MAIN_FEED_ID = "_fSzIxvtfekt0QkYy"
 RSS_APP_URL = f"https://rss.app/feeds/v1.1/{MAIN_FEED_ID}.json"
@@ -40,18 +40,19 @@ Your objective is to evaluate these items globally and isolate entries of clear 
 
 CRITICAL POLICY FILTERS:
 - HIGH IMPORTANCE: Capital/infrastructure project milestones, significant budget allocations, City Council voting outcomes, policy or ordinance overhauls, major economic development announcements, or key public program rollouts.
-- ADMINISTRATIVE FILLER (IGNORE): Public relations photo-ops, routine safety reminders (e.g., weather awareness), daily park/pool operational hours, neighborhood garbage/cleanup collection alerts, and low-priority flyers.
+- ADMINISTRATIVE FILLER (IGNORE): Public relations photo-ops, routine safety reminders (e.g., weather awareness), daily park/pool operational updates, neighborhood garbage/cleanup collection alerts, and low-priority flyers.
 
 EVALUATION RULES: Evaluate entirely on content substance. If an item comes from social media but announces a major city project win, select it. If an official city feed post is just a reminder about routine safety rules, ignore it. Do not just pick items from the top of the list. Aim to isolate the top 4 to 8 best available entries.
 
 RESPONSE FORMAT: You must respond with a JSON object containing a key named "highlights" mapped to an array of matching integer indexes.
 Example layout: { "highlights": [1, 14, 22] }"""
 
+    # FIXED: Added quotation marks around "content" keys
     classification_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", content: classifier_prompt},
-            {"role": "user", content: json.dumps(simplified_list)}
+            {"role": "system", "content": classifier_prompt},
+            {"role": "user", "content": json.dumps(simplified_list)}
         ],
         response_format={"type": "json_object"},
         temperature=0.1
@@ -88,11 +89,12 @@ CRITICAL FORMATTING RULES:
         src = item["authors"][0]["name"] if item.get("authors") else "City News"
         summary_corpus += f"Source: {src}\nTitle: {item.get('title')}\nDetails: {item.get('content_text', '')[:200]}\n\n"
 
+    # FIXED: Added quotation marks around "content" keys here as well
     briefing_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", content: briefing_prompt},
-            {"role": "user", content: summary_corpus}
+            {"role": "system", "content": briefing_prompt},
+            {"role": "user", "content": summary_corpus}
         ],
         temperature=0.2
     )
@@ -100,7 +102,7 @@ CRITICAL FORMATTING RULES:
     generated_briefing = briefing_response.choices[0].message.content
 
 
-    # --- TASK 3: SAVE UNIFIED WORKSPACE PACKAGE TO REPO ---
+    # --- TASK 3: SAVE UNIFIED WORKSPACE PACKAGE ---
     output_payload = {
         "summary": generated_briefing,
         "items": feed_data["items"]
