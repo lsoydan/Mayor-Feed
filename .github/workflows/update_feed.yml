@@ -1,13 +1,39 @@
-- name: Run Job Seeker Parser
+name: Update City Feed
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Job Seeker Parser
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python city_feed_parcer.py 
+        run: python city_feed_parcer.py
 
-      # NEW STEP: Append this to process the Mayor's dashboard at the same time
       - name: Run Mayor Executive Feed Parser
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python mayor_feed_parser.py 
+        run: python mayor_feed_parser.py
 
       - name: Commit and push changes
         run: |
