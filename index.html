@@ -57,30 +57,38 @@
     summaryBox.style.display = "block";
   }
 
-  async function loadNews(selectedAuthor = "Highlights") {
+async function loadNews(selectedAuthor = "Highlights") {
+    // Gracefully lookup the element, using a safe fallback if missing
     const status = document.getElementById('status-msg');
     const feedId = FEED_MAP[selectedAuthor] || "LOCAL_FILE";
     
-    // Auto-minimize briefing box when tabs flip
     const aiBox = document.getElementById('ai-summary-box');
     if (aiBox) aiBox.style.display = "none";
 
-   let fetchUrl = "";
+    let fetchUrl = "";
     if (feedId === "LOCAL_FILE") {
-      // UPGRADED: Pulls instantly from GitHub's raw data infrastructure
-      fetchUrl = `https://raw.githubusercontent.com/aedwards/Mayor-Feed/main/mayor_news.json`;
+      // PASTE YOUR RAW GITHUB URL COPIED FROM STEP 1 HERE:
+      fetchUrl = `https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/refs/heads/main/mayor_news.json`;
+    } else {
+      fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
     }
 
     try {
-      status.style.display = 'block';
-      status.innerText = `Updating feed...`;
+      if (status) {
+        status.style.display = 'block';
+        status.innerText = `Updating feed...`;
+      }
       
       const response = await fetch(fetchUrl);
-      const data = await response.json();
       
+      // If the URL returns a 404 or fails, throw an explicit error to the catch block
+      if (!response.ok) {
+        throw new Error(`Network network response failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
       let rawItems = [];
 
-      // Extract properties based on whether we loaded our structured file or raw RSSapp JSON
       if (feedId === "LOCAL_FILE") {
         rawItems = data.items || [];
         cachedBriefingHTML = data.summary || "No summary available for this cycle.";
@@ -90,24 +98,28 @@
       }
 
       if (rawItems.length === 0) {
-        status.innerText = "No announcements found.";
+        if (status) status.innerText = "No announcements found.";
         return;
       }
 
-      // Chronological sort filter mapping
       rawItems.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
 
       if (!dropdownInitialized) {
         populateDropdown();
       }
 
-      status.style.display = 'none';
+      if (status) status.style.display = 'none';
       distributePosts(rawItems, selectedAuthor);
     } catch (err) {
-      status.innerHTML = `<div style="color:red;">Error loading news data profile.</div>`;
+      // Safeguarded error reporting: Logs the real problem without breaking page states
+      console.error("Dashboard Sync Error Details:", err);
+      if (status) {
+        status.innerHTML = `<div style="color:red;">Error loading news data profile. Please try refreshing.</div>`;
+      }
     }
   }
 
+  
   function populateDropdown() {
     const filter = document.getElementById('authorFilter');
     filter.innerHTML = '';
