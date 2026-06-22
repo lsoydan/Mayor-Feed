@@ -1,0 +1,18 @@
+- name: Run Job Seeker Parser
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python city_feed_parcer.py 
+
+      # NEW STEP: Append this to process the Mayor's dashboard at the same time
+      - name: Run Mayor Executive Feed Parser
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python mayor_feed_parser.py 
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Automated AI feed update" || exit 0
+          git push
