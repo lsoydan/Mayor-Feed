@@ -28,7 +28,7 @@ jobs:
       - name: Run Job Seeker Parser
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python city_feed_parcer.py
+        run: python city_feed_parser.py
 
       - name: Run Mayor Executive Feed Parser
         env:
