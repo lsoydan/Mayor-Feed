@@ -68,7 +68,7 @@ async function loadNews(selectedAuthor = "Highlights") {
     let fetchUrl = "";
     if (feedId === "LOCAL_FILE") {
       // PASTE YOUR RAW GITHUB URL COPIED FROM STEP 1 HERE:
-      fetchUrl = `https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/refs/heads/main/mayor_news.json`;
+      fetchUrl = `https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/main/mayor_news.json`;
     } else {
       fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
     }
