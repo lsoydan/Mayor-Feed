@@ -1,193 +1,497 @@
-<script>
-  // Main feed source
-  const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
+Here is the complete, production-ready **`index.html`** code. It includes the required visual layout styling, the HTML container structural IDs to prevent console crashes, and the explicit raw GitHub path pointing straight to your repository's data file.
 
-  const FEED_MAP = {
-    "Highlights": "LOCAL_FILE",
-    "All News": "LOCAL_FILE",
-    "Innovation": "_0ADB6njzx3sw9LyS", 
-    "City Social Media": "_KxzixUygzbdzu5KA",
-    "City Updates": "LTs3Zw710ixkkYP7",
-    "Local Government": "_Bh3ttARfh8MqDS8G",
-    "Local Orgs": "_HBdbLaXs1Is9iYiz",
-    "City Council": "_qJBzJHUiKp4cWvVc",
-    "Boards & Commissions": "_klPSjjaTN6sIeWKD",
-    "Local News": "_4BQAEpcspmOwUWSz"
-  };
+Overwrite your entire `index.html` file with this code:
 
-  const CATEGORY_LIST = [
-    "Highlights",
-    "All News", 
-    "Boards & Commissions",
-    "City Council",
-    "City Social Media", 
-    "City Updates",
-    "Innovation", 
-    "Local Government", 
-    "Local News",
-    "Local Orgs"
-  ];
-
-  let dropdownInitialized = false;
-  let cachedBriefingHTML = "No summary could be generated."; // Pre-compiled tracking placeholder
-
-  function toggleLanguage() {
-    const isSpanish = document.getElementById('langToggle').checked;
-    const combo = document.querySelector('.goog-te-combo');
-    if (combo) {
-      combo.value = isSpanish ? 'es' : 'en';
-      combo.dispatchEvent(new Event('change'));
-    }
-  }
-
-  function closeAISummary() {
-    document.getElementById('ai-summary-box').style.display = 'none';
-  }
-
-  // INSTANT BRIEFING LOOKUP: No network requests needed anymore!
-  function fetchAISummary() {
-    const summaryBox = document.getElementById('ai-summary-box');
-    const headerHTML = `
-      <div class="ai-summary-header">
-        <h3>✨ AI Feed Summary</h3>
-        <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
-      </div>
-    `;
-    summaryBox.innerHTML = `${headerHTML}<div>${cachedBriefingHTML}</div>`;
-    summaryBox.style.display = "block";
-  }
-
-async function loadNews(selectedAuthor = "Highlights") {
-    // Gracefully lookup the element, using a safe fallback if missing
-    const status = document.getElementById('status-msg');
-    const feedId = FEED_MAP[selectedAuthor] || "LOCAL_FILE";
-    
-    const aiBox = document.getElementById('ai-summary-box');
-    if (aiBox) aiBox.style.display = "none";
-
-    let fetchUrl = "";
-    if (feedId === "LOCAL_FILE") {
-      // PASTE YOUR RAW GITHUB URL COPIED FROM STEP 1 HERE:
-      fetchUrl = `https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/main/mayor_news.json`;
-    } else {
-      fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mayor's News Feed</title>
+  <style>
+    :root {
+      --bg-color: #f4f7f6;
+      --text-color: #333;
+      --primary-purple: #7c4dff;
+      --primary-purple-hover: #651fff;
+      --card-bg: #ffffff;
+      --border-color: #e0e0e0;
     }
 
-    try {
-      if (status) {
-        status.style.display = 'block';
-        status.innerText = `Updating feed...`;
-      }
-      
-      const response = await fetch(fetchUrl);
-      
-      // If the URL returns a 404 or fails, throw an explicit error to the catch block
-      if (!response.ok) {
-        throw new Error(`Network network response failed with status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      let rawItems = [];
-
-      if (feedId === "LOCAL_FILE") {
-        rawItems = data.items || [];
-        cachedBriefingHTML = data.summary || "No summary available for this cycle.";
-      } else {
-        rawItems = data.items || [];
-        cachedBriefingHTML = "AI summary metrics are currently optimized for the primary Highlights workspace tab.";
-      }
-
-      if (rawItems.length === 0) {
-        if (status) status.innerText = "No announcements found.";
-        return;
-      }
-
-      rawItems.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
-
-      if (!dropdownInitialized) {
-        populateDropdown();
-      }
-
-      if (status) status.style.display = 'none';
-      distributePosts(rawItems, selectedAuthor);
-    } catch (err) {
-      // Safeguarded error reporting: Logs the real problem without breaking page states
-      console.error("Dashboard Sync Error Details:", err);
-      if (status) {
-        status.innerHTML = `<div style="color:red;">Error loading news data profile. Please try refreshing.</div>`;
-      }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 40px 20px;
     }
-  }
 
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    /* Language Switcher */
+    .lang-toggle-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #b2bec3;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary-purple);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .search-input, .filter-select {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      padding: 14px 20px;
+      border-radius: 30px;
+      font-size: 1rem;
+      outline: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      min-width: 260px;
+    }
+
+    .search-input:focus, .filter-select:focus {
+      border-color: var(--primary-purple);
+    }
+
+    .ai-btn {
+      background-color: var(--primary-purple);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(124, 77, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .ai-btn:hover {
+      background-color: var(--primary-purple-hover);
+      transform: translateY(-1px);
+    }
+
+    /* AI Summary Box */
+    .ai-summary-box {
+      display: none;
+      background: #fff;
+      border-left: 5px solid var(--primary-purple);
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .ai-summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .ai-summary-header h3 {
+      margin: 0;
+      color: var(--primary-purple);
+      font-size: 1.3rem;
+    }
+
+    .ai-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #95a5a6;
+    }
+
+    .ai-summary-box ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .ai-summary-box li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    /* Status Message */
+    .status-msg {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #7f8c8d;
+      margin-top: 40px;
+    }
+
+    /* 3-Column Masonry Grid */
+    .news-grid {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Post Cards */
+    .post-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+      border: 1px solid rgba(0,0,0,0.05);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .post-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+
+    .post-image {
+      width: 100%;
+      height: auto;
+      max-height: 250px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .post-content {
+      padding: 20px;
+      flex-grow: 1;
+    }
+
+    .post-content p {
+      margin: 0;
+      line-height: 1.5;
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    .post-author {
+      padding: 15px 20px;
+      border-top: 1px solid rgba(0,0,0,0.04);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #7f8c8d;
+      display: flex;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+
+    @media (max-width: 900px) {
+      .news-grid { flex-direction: column; }
+    }
+  </style>
   
-  function populateDropdown() {
-    const filter = document.getElementById('authorFilter');
-    filter.innerHTML = '';
-    CATEGORY_LIST.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat;
-      option.textContent = cat;
-      filter.appendChild(option);
-    });
-    dropdownInitialized = true;
-  }
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,es', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</head>
+<body>
 
-  function distributePosts(posts, activeFilter) {
-    const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
-    cols.forEach(c => c.innerHTML = "");
+  <div class="container">
+    <h1>Mayor's News Feed</h1>
+    
+    <div class="lang-toggle-container">
+      <span>ENGLISH</span>
+      <label class="switch">
+        <input type="checkbox" id="langToggle" onchange="toggleLanguage()">
+        <span class="slider"></span>
+      </label>
+      <span>ESPAÑOL</span>
+    </div>
 
-    let visibleCount = 0;
-    posts.forEach((post) => {
+    <div class="controls-bar">
+      <input type="text" id="searchBar" class="search-input" placeholder="Search news..." oninput="applyFilters()">
+      <select id="authorFilter" class="filter-select" onchange="handleAuthorChange()"></select>
+      <button class="ai-btn" onclick="fetchAISummary()">✨ Get AI Briefing</button>
+    </div>
+
+    <div id="ai-summary-box" class="ai-summary-box"></div>
+
+    <div id="status-msg" class="status-msg">Loading dashboard updates...</div>
+
+    <div class="news-grid">
+      <div id="col-1" class="column"></div>
+      <div id="col-2" class="column"></div>
+      <div id="col-3" class="column"></div>
+    </div>
+  </div>
+
+  <script>
+    // Master data sync links mapping
+    const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
+
+    const FEED_MAP = {
+      "Highlights": "LOCAL_FILE",
+      "All News": "LOCAL_FILE",
+      "Innovation": "_0ADB6njzx3sw9LyS", 
+      "City Social Media": "_KxzixUygzbdzu5KA",
+      "City Updates": "LTs3Zw710ixkkYP7",
+      "Local Government": "_Bh3ttARfh8MqDS8G",
+      "Local Orgs": "_HBdbLaXs1Is9iYiz",
+      "City Council": "_qJBzJHUiKp4cWvVc",
+      "Boards & Commissions": "_klPSjjaTN6sIeWKD",
+      "Local News": "_4BQAEpcspmOwUWSz"
+    };
+
+    const CATEGORY_LIST = [
+      "Highlights",
+      "All News", 
+      "Boards & Commissions",
+      "City Council",
+      "City Social Media", 
+      "City Updates",
+      "Innovation", 
+      "Local Government", 
+      "Local News",
+      "Local Orgs"
+    ];
+
+    let dropdownInitialized = false;
+    let cachedBriefingHTML = "No summary has been generated for this cycle yet.";
+
+    function toggleLanguage() {
+      const isSpanish = document.getElementById('langToggle').checked;
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = isSpanish ? 'es' : 'en';
+        combo.dispatchEvent(new Event('change'));
+      }
+    }
+
+    function closeAISummary() {
+      document.getElementById('ai-summary-box').style.display = 'none';
+    }
+
+    function fetchAISummary() {
+      const summaryBox = document.getElementById('ai-summary-box');
+      if (!summaryBox) return;
       
-      // Strict Highlight verification filter loop pass
-      if (activeFilter === "Highlights" && post.is_highlight !== 1) {
-        return;
-      }
+      const headerHTML = `
+        <div class="ai-summary-header">
+          <h3>✨ AI Feed Summary</h3>
+          <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
+        </div>
+      `;
+      summaryBox.innerHTML = `${headerHTML}<div>${cachedBriefingHTML}</div>`;
+      summaryBox.style.display = "block";
+    }
 
-      let imageSrc = post.image || post.thumbnail;
-      if (!imageSrc && post.attachments && post.attachments[0]) imageSrc = post.attachments[0].url;
-      if (!imageSrc && post.description_html && post.description_html.includes('<img')) {
-        const match = post.description_html.match(/<img[^>]+src="([^">]+)"/);
-        if (match) imageSrc = match[1];
-      }
-
-      const rawText = (post.content_text || "").trim();
-      let sourceName = (post.authors && post.authors[0]) ? post.authors[0].name : "City News";
-
-      let pubDate = "";
-      if (post.date_published) {
-        const d = new Date(post.date_published);
-        pubDate = d.toLocaleDateString(undefined, {
-          month: 'short',
-          day: 'numeric'
-        });
-      }
-
-      const imgTag = imageSrc ? `<img src="${imageSrc}" class="post-image" onerror="this.parentElement.removeChild(this)">` : '';
-      const cleanText = rawText.length > 400 ? rawText.substring(0, 400) + "..." : rawText;
-      const textTag = cleanText ? `<div class="post-content"><p>${cleanText}</p></div>` : '';
-      const authorTag = `<span class="post-author"><span>${pubDate}</span><span>${sourceName}</span></span>`;
-
-      const cardHtml = `<a href="${post.url}" class="post-card" target="_blank">${imgTag}${textTag}${authorTag}</a>`;
+    async function loadNews(selectedAuthor = "Highlights") {
+      const status = document.getElementById('status-msg');
+      const feedId = FEED_MAP[selectedAuthor] || "LOCAL_FILE";
       
-      cols[visibleCount % 3].insertAdjacentHTML('beforeend', cardHtml);
-      visibleCount++;
-    });
-  }
+      const aiBox = document.getElementById('ai-summary-box');
+      if (aiBox) aiBox.style.display = "none";
 
-  function handleAuthorChange() {
-    const selectedAuthor = document.getElementById('authorFilter').value;
-    loadNews(selectedAuthor);
-  }
+      let fetchUrl = "";
+      if (feedId === "LOCAL_FILE") {
+        // CASE-SENSITIVE PATH INTEGRATION LINK
+        fetchUrl = `https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/main/mayor_news.json`;
+      } else {
+        fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
+      }
 
-  function applyFilters() {
-    const query = document.getElementById('searchBar').value.toLowerCase();
-    document.querySelectorAll('.post-card').forEach(card => {
-      const matches = card.innerText.toLowerCase().includes(query);
-      card.style.display = matches ? "block" : "none";
-    });
-  }
+      try {
+        if (status) {
+          status.style.display = 'block';
+          status.innerText = `Updating feed...`;
+        }
+        
+        const response = await fetch(fetchUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Server returned error code status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        let rawItems = [];
 
-  // Initial runtime invocation targeting Highlights
-  loadNews("Highlights");
-</script>
+        if (feedId === "LOCAL_FILE") {
+          rawItems = data.items || [];
+          cachedBriefingHTML = data.summary || "No summary available for this cycle.";
+        } else {
+          rawItems = data.items || [];
+          cachedBriefingHTML = "AI summary metrics are currently optimized for the primary Highlights workspace tab.";
+        }
+
+        if (rawItems.length === 0) {
+          if (status) status.innerText = "No announcements found.";
+          return;
+        }
+
+        rawItems.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
+
+        if (!dropdownInitialized) {
+          populateDropdown();
+        }
+
+        if (status) status.style.display = 'none';
+        distributePosts(rawItems, selectedAuthor);
+      } catch (err) {
+        console.error("Dashboard Sync Error Details:", err);
+        if (status) {
+          status.innerHTML = `<div style="color:red;">Error syncing latest updates. Please refresh the browser.</div>`;
+        }
+      }
+    }
+
+    function populateDropdown() {
+      const filter = document.getElementById('authorFilter');
+      if (!filter) return;
+      filter.innerHTML = '';
+      CATEGORY_LIST.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        filter.appendChild(option);
+      });
+      dropdownInitialized = true;
+    }
+
+    function distributePosts(posts, activeFilter) {
+      const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
+      
+      // Verification backup to prevent crashes if columns are physically unrendered
+      if (!cols[0] || !cols[1] || !cols[2]) return;
+      
+      cols.forEach(c => c.innerHTML = "");
+
+      let visibleCount = 0;
+      posts.forEach((post) => {
+        
+        if (activeFilter === "Highlights" && post.is_highlight !== 1) {
+          return;
+        }
+
+        let imageSrc = post.image || post.thumbnail;
+        if (!imageSrc && post.attachments && post.attachments[0]) imageSrc = post.attachments[0].url;
+        if (!imageSrc && post.description_html && post.description_html.includes('<img')) {
+          const match = post.description_html.match(/<img[^>]+src="([^">]+)"/);
+          if (match) imageSrc = match[1];
+        }
+
+        const rawText = (post.content_text || "").trim();
+        let sourceName = (post.authors && post.authors[0]) ? post.authors[0].name : "City News";
+
+        let pubDate = "";
+        if (post.date_published) {
+          const d = new Date(post.date_published);
+          pubDate = d.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric'
+          });
+        }
+
+        const imgTag = imageSrc ? `<img src="${imageSrc}" class="post-image" onerror="this.parentElement.removeChild(this)">` : '';
+        const cleanText = rawText.length > 350 ? rawText.substring(0, 350) + "..." : rawText;
+        const textTag = cleanText ? `<div class="post-content"><p>${cleanText}</p></div>` : '';
+        const authorTag = `<span class="post-author"><span>${pubDate}</span><span>${sourceName}</span></span>`;
+
+        const cardHtml = `<a href="${post.url}" class="post-card" target="_blank">${imgTag}${textTag}${authorTag}</a>`;
+        
+        cols[visibleCount % 3].insertAdjacentHTML('beforeend', cardHtml);
+        visibleCount++;
+      });
+    }
+
+    function handleAuthorChange() {
+      const selectedAuthor = document.getElementById('authorFilter').value;
+      loadNews(selectedAuthor);
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('searchBar').value.toLowerCase();
+      document.querySelectorAll('.post-card').forEach(card => {
+        const matches = card.innerText.toLowerCase().includes(query);
+        card.style.display = matches ? "block" : "none";
+      });
+    }
+
+    // Default entry loading parameter invocation
+    loadNews("Highlights");
+  </script>
+</body>
+</html>
+
+```
