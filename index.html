@@ -336,209 +336,216 @@
   <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
   <script>
-    // Main feed source
-    const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
+  // Main feed source
+  const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
 
-    // Categories
-    const FEED_MAP = {
-      "All News": MAIN_FEED_ID,
-      "Innovation": "_0ADB6njzx3sw9LyS", 
-      "City Social Media": "_KxzixUygzbdzu5KA",
-      "City Updates": "LTs3Zw710ixkkYP7",
-      "Local Government": "_Bh3ttARfh8MqDS8G",
-      "Local Orgs": "_HBdbLaXs1Is9iYiz",
-      "City Council": "_qJBzJHUiKp4cWvVc",
-      "Boards & Commissions": "_klPSjjaTN6sIeWKD",
-      "Local News": "_4BQAEpcspmOwUWSz"
-    };
+  // 1. UPDATED: Map "Highlights" to point to the main feed ID
+  const FEED_MAP = {
+    "Highlights": MAIN_FEED_ID,
+    "All News": MAIN_FEED_ID,
+    "Innovation": "_0ADB6njzx3sw9LyS", 
+    "City Social Media": "_KxzixUygzbdzu5KA",
+    "City Updates": "LTs3Zw710ixkkYP7",
+    "Local Government": "_Bh3ttARfh8MqDS8G",
+    "Local Orgs": "_HBdbLaXs1Is9iYiz",
+    "City Council": "_qJBzJHUiKp4cWvVc",
+    "Boards & Commissions": "_klPSjjaTN6sIeWKD",
+    "Local News": "_4BQAEpcspmOwUWSz"
+  };
 
-    const CATEGORY_LIST = [
-      "All News", 
-      "Boards & Commissions",
-      "City Council",
-      "City Social Media", 
-      "City Updates",
-      "Innovation", 
-      "Local Government", 
-      "Local News",
-      "Local Orgs"
-    ];
+  // 2. UPDATED: Put "Highlights" at the very top to make it the default view
+  const CATEGORY_LIST = [
+    "Highlights",
+    "All News", 
+    "Boards & Commissions",
+    "City Council",
+    "City Social Media", 
+    "City Updates",
+    "Innovation", 
+    "Local Government", 
+    "Local News",
+    "Local Orgs"
+  ];
 
-    let dropdownInitialized = false;
-    let currentFeedContent = ""; // NEW: Stores current feed text for the AI
+  let dropdownInitialized = false;
+  let currentFeedContent = ""; 
 
-    function toggleLanguage() {
-      const isSpanish = document.getElementById('langToggle').checked;
-      const combo = document.querySelector('.goog-te-combo');
-      if (combo) {
-        combo.value = isSpanish ? 'es' : 'en';
-        combo.dispatchEvent(new Event('change'));
-      }
+  function toggleLanguage() {
+    const isSpanish = document.getElementById('langToggle').checked;
+    const combo = document.querySelector('.goog-te-combo');
+    if (combo) {
+      combo.value = isSpanish ? 'es' : 'en';
+      combo.dispatchEvent(new Event('change'));
+    }
+  }
+
+  function closeAISummary() {
+    document.getElementById('ai-summary-box').style.display = 'none';
+  }
+
+  async function fetchAISummary() {
+    const summaryBox = document.getElementById('ai-summary-box');
+    const btn = document.getElementById('aiSummaryBtn');
+    
+    btn.innerHTML = "⏳ Reading the news...";
+    btn.disabled = true;
+    summaryBox.style.display = "none";
+    
+    const headerHTML = `
+      <div class="ai-summary-header">
+        <h3>✨ AI Feed Summary</h3>
+        <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
+      </div>
+    `;
+    
+    try {
+      const response = await fetch('https://mayor-ai-briefing.aedwards-5db.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newsData: currentFeedContent })
+      });
+      
+      const data = await response.json();
+      const summaryText = data.summary || "No summary could be generated.";
+      
+      summaryBox.innerHTML = `${headerHTML}<div>${summaryText}</div>`;
+      summaryBox.style.display = "block";
+    } catch (error) {
+      summaryBox.innerHTML = `${headerHTML}<div style="color:red; text-align:center;">Error connecting to the AI endpoint. Check your server settings.</div>`;
+      summaryBox.style.display = "block";
+    }
+    
+    btn.innerHTML = "✨ Get AI Briefing";
+    btn.disabled = false;
+  }
+
+  // 3. UPDATED: Default this function parameter to "Highlights" and reroute fetch to your Worker
+  async function loadNews(selectedAuthor = "Highlights") {
+    const status = document.getElementById('status-msg');
+    const feedId = FEED_MAP[selectedAuthor] || FEED_MAP["Highlights"];
+    
+    const aiBtn = document.getElementById('aiSummaryBtn');
+    const aiBox = document.getElementById('ai-summary-box');
+    if (aiBtn && aiBox) {
+      aiBtn.style.display = "flex"; 
+      aiBox.style.display = "none"; 
     }
 
-    // Function to close/minimize the AI Summary
-    function closeAISummary() {
-      document.getElementById('ai-summary-box').style.display = 'none';
+    if (!feedId) {
+      status.innerText = `Feed for ${selectedAuthor} is not yet configured.`;
+      const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
+      cols.forEach(c => c.innerHTML = "");
+      return;
     }
 
-    // NEW: Dynamic AI Fetch Function
-    async function fetchAISummary() {
-      const summaryBox = document.getElementById('ai-summary-box');
-      const btn = document.getElementById('aiSummaryBtn');
-      
-      btn.innerHTML = "⏳ Reading the news...";
-      btn.disabled = true;
-      summaryBox.style.display = "none";
-      
-      const headerHTML = `
-        <div class="ai-summary-header">
-          <h3>✨ AI Feed Summary</h3>
-          <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
-        </div>
-      `;
-      
-      try {
-        // Send the feed text to your secure middleman server
-        const response = await fetch('https://mayor-ai-briefing.aedwards-5db.workers.dev', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newsData: currentFeedContent })
-        });
-        
-        const data = await response.json();
-        
-        // Assuming your backend returns a JSON object like: { "summary": "Here is the news..." }
-        const summaryText = data.summary || "No summary could be generated.";
-        
-        summaryBox.innerHTML = `${headerHTML}<div>${summaryText}</div>`;
-        summaryBox.style.display = "block";
-      } catch (error) {
-        summaryBox.innerHTML = `${headerHTML}<div style="color:red; text-align:center;">Error connecting to the AI endpoint. Check your server settings.</div>`;
-        summaryBox.style.display = "block";
-      }
-      
-      btn.innerHTML = "✨ Get AI Briefing";
-      btn.disabled = false;
-    }
+    // UPDATED: Reroute target to your Cloudflare backend middleware to fetch AI enriched tags
+    const fetchUrl = `https://mayor-ai-briefing.aedwards-5db.workers.dev/enrich-feed?feedId=${feedId}`;
 
-    async function loadNews(selectedAuthor = "All News") {
-      const status = document.getElementById('status-msg');
-      const feedId = FEED_MAP[selectedAuthor] || FEED_MAP["All News"];
+    try {
+      status.style.display = 'block';
+      status.innerText = `Updating feed...`;
+      const response = await fetch(fetchUrl);
+      const data = await response.json();
       
-      // --- SHOW AI FEATURES ON ALL PAGES ---
-      const aiBtn = document.getElementById('aiSummaryBtn');
-      const aiBox = document.getElementById('ai-summary-box');
-      if (aiBtn && aiBox) {
-        aiBtn.style.display = "flex"; // Keep the button visible on all feeds
-        aiBox.style.display = "none"; // Auto-close the summary box when they switch views
-      }
-      // -------------------------------------
-
-      if (!feedId) {
-        status.innerText = `Feed for ${selectedAuthor} is not yet configured.`;
-        const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
-        cols.forEach(c => c.innerHTML = "");
+      if (!data.items || data.items.length === 0) {
+        status.innerText = "No announcements found.";
         return;
       }
 
-      const fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
+      data.items.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
 
-      try {
-        status.style.display = 'block';
-        status.innerText = `Updating feed...`;
-        const response = await fetch(fetchUrl);
-        const data = await response.json();
-        
-        if (!data.items || data.items.length === 0) {
-          status.innerText = "No announcements found.";
-          return;
-        }
-
-        data.items.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
-
-        if (!dropdownInitialized) {
-          populateDropdown();
-        }
-
-        status.style.display = 'none';
-        distributePosts(data.items);
-      } catch (err) {
-        status.innerHTML = `<div style="color:red;">Error loading news.</div>`;
+      if (!dropdownInitialized) {
+        populateDropdown();
       }
+
+      status.style.display = 'none';
+      
+      // UPDATED: Pass selectedAuthor through so we can filter inside distributePosts
+      distributePosts(data.items, selectedAuthor);
+    } catch (err) {
+      status.innerHTML = `<div style="color:red;">Error loading news.</div>`;
     }
+  }
 
-    function populateDropdown() {
-      const filter = document.getElementById('authorFilter');
-      filter.innerHTML = '';
-      CATEGORY_LIST.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat;
-        option.textContent = cat;
-        filter.appendChild(option);
-      });
-      dropdownInitialized = true;
-    }
+  function populateDropdown() {
+    const filter = document.getElementById('authorFilter');
+    filter.innerHTML = '';
+    CATEGORY_LIST.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      filter.appendChild(option);
+    });
+    dropdownInitialized = true;
+  }
 
-    function distributePosts(posts) {
-      const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
-      cols.forEach(c => c.innerHTML = "");
+  // 4. UPDATED: Accept activeFilter parameter and strip out anything without a highlight flag if active
+  function distributePosts(posts, activeFilter) {
+    const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
+    cols.forEach(c => c.innerHTML = "");
 
-      // NEW: Grab the top 10 posts, strip out heavy HTML, and save them for the AI
-      currentFeedContent = posts.slice(0, 10).map(post => {
-         const author = (post.authors && post.authors[0]) ? post.authors[0].name : 'Unknown';
-         const text = post.content_text ? post.content_text.substring(0, 250) : '';
-         return `Source: ${author}\nHeadline: ${post.title}\nDetails: ${text}...`;
-      }).join('\n\n---\n\n');
+    currentFeedContent = posts.slice(0, 10).map(post => {
+       const author = (post.authors && post.authors[0]) ? post.authors[0].name : 'Unknown';
+       const text = post.content_text ? post.content_text.substring(0, 250) : '';
+       return `Source: ${author}\nHeadline: ${post.title}\nDetails: ${text}...`;
+    }).join('\n\n---\n\n');
 
-      let visibleCount = 0;
-      posts.forEach((post) => {
-        let imageSrc = post.image || post.thumbnail;
-        if (!imageSrc && post.attachments && post.attachments[0]) imageSrc = post.attachments[0].url;
-        if (!imageSrc && post.description_html && post.description_html.includes('<img')) {
-          const match = post.description_html.match(/<img[^>]+src="([^">]+)"/);
-          if (match) imageSrc = match[1];
-        }
+    let visibleCount = 0;
+    posts.forEach((post) => {
+      
+      // NEW AI FILTERING CRITERIA: If user is on the "Highlights" tab, reject any post not flagged by AI
+      if (activeFilter === "Highlights" && post.is_highlight !== 1) {
+        return;
+      }
 
-        const rawText = (post.content_text || "").trim();
-        
-        let sourceName = (post.authors && post.authors[0]) ? post.authors[0].name : "City News";
+      let imageSrc = post.image || post.thumbnail;
+      if (!imageSrc && post.attachments && post.attachments[0]) imageSrc = post.attachments[0].url;
+      if (!imageSrc && post.description_html && post.description_html.includes('<img')) {
+        const match = post.description_html.match(/<img[^>]+src="([^">]+)"/);
+        if (match) imageSrc = match[1];
+      }
 
-        let pubDate = "";
-        if (post.date_published) {
-          const d = new Date(post.date_published);
-          pubDate = d.toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric'
-          });
-        }
+      const rawText = (post.content_text || "").trim();
+      let sourceName = (post.authors && post.authors[0]) ? post.authors[0].name : "City News";
 
-        const imgTag = imageSrc ? `<img src="${imageSrc}" class="post-image" onerror="this.parentElement.removeChild(this)">` : '';
-        const cleanText = rawText.length > 400 ? rawText.substring(0, 400) + "..." : rawText;
-        const textTag = cleanText ? `<div class="post-content"><p>${cleanText}</p></div>` : '';
-        const authorTag = `<span class="post-author"><span>${pubDate}</span><span>${sourceName}</span></span>`;
+      let pubDate = "";
+      if (post.date_published) {
+        const d = new Date(post.date_published);
+        pubDate = d.toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric'
+        });
+      }
 
-        const cardHtml = `<a href="${post.url}" class="post-card" target="_blank">${imgTag}${textTag}${authorTag}</a>`;
-        
-        cols[visibleCount % 3].insertAdjacentHTML('beforeend', cardHtml);
-        visibleCount++;
-      });
-    }
+      const imgTag = imageSrc ? `<img src="${imageSrc}" class="post-image" onerror="this.parentElement.removeChild(this)">` : '';
+      const cleanText = rawText.length > 400 ? rawText.substring(0, 400) + "..." : rawText;
+      const textTag = cleanText ? `<div class="post-content"><p>${cleanText}</p></div>` : '';
+      const authorTag = `<span class="post-author"><span>${pubDate}</span><span>${sourceName}</span></span>`;
 
-    function handleAuthorChange() {
-      const selectedAuthor = document.getElementById('authorFilter').value;
-      loadNews(selectedAuthor);
-    }
+      const cardHtml = `<a href="${post.url}" class="post-card" target="_blank">${imgTag}${textTag}${authorTag}</a>`;
+      
+      cols[visibleCount % 3].insertAdjacentHTML('beforeend', cardHtml);
+      visibleCount++;
+    });
+  }
 
-    function applyFilters() {
-      const query = document.getElementById('searchBar').value.toLowerCase();
-      document.querySelectorAll('.post-card').forEach(card => {
-        const matches = card.innerText.toLowerCase().includes(query);
-        card.style.display = matches ? "block" : "none";
-      });
-    }
+  function handleAuthorChange() {
+    const selectedAuthor = document.getElementById('authorFilter').value;
+    loadNews(selectedAuthor);
+  }
 
-    loadNews("All News");
-  </script>
+  function applyFilters() {
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    document.querySelectorAll('.post-card').forEach(card => {
+      const matches = card.innerText.toLowerCase().includes(query);
+      card.style.display = matches ? "block" : "none";
+    });
+  }
+
+  // 5. UPDATED: Call "Highlights" right out of the gate
+  loadNews("Highlights");
+</script>
+
 </body>
 
 </html>
