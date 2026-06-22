@@ -65,13 +65,10 @@
     const aiBox = document.getElementById('ai-summary-box');
     if (aiBox) aiBox.style.display = "none";
 
-    let fetchUrl = "";
+   let fetchUrl = "";
     if (feedId === "LOCAL_FILE") {
-      // Direct pass into our local flat-file compiled by GitHub Actions
-      fetchUrl = `./mayor_news.json`;
-    } else {
-      // Dynamic fallback pass hitting RSSapp directly for sub-categories
-      fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
+      // UPGRADED: Pulls instantly from GitHub's raw data infrastructure
+      fetchUrl = `https://raw.githubusercontent.com/aedwards/Mayor-Feed/main/mayor_news.json`;
     }
 
     try {
