@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +34,6 @@
       font-weight: 800;
     }
 
-    /* Language Switcher */
     .lang-toggle-container {
       display: flex;
       justify-content: center;
@@ -54,11 +52,7 @@
       height: 24px;
     }
 
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    .switch input { opacity: 0; width: 0; height: 0; }
 
     .slider {
       position: absolute;
@@ -81,15 +75,9 @@
       border-radius: 50%;
     }
 
-    input:checked + .slider {
-      background-color: var(--primary-purple);
-    }
+    input:checked + .slider { background-color: var(--primary-purple); }
+    input:checked + .slider:before { transform: translateX(26px); }
 
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-
-    /* Controls Bar */
     .controls-bar {
       display: flex;
       flex-wrap: wrap;
@@ -110,9 +98,7 @@
       min-width: 260px;
     }
 
-    .search-input:focus, .filter-select:focus {
-      border-color: var(--primary-purple);
-    }
+    .search-input:focus, .filter-select:focus { border-color: var(--primary-purple); }
 
     .ai-btn {
       background-color: var(--primary-purple);
@@ -135,7 +121,6 @@
       transform: translateY(-1px);
     }
 
-    /* AI Summary Box */
     .ai-summary-box {
       display: none;
       background: #fff;
@@ -153,53 +138,17 @@
       margin-bottom: 15px;
     }
 
-    .ai-summary-header h3 {
-      margin: 0;
-      color: var(--primary-purple);
-      font-size: 1.3rem;
-    }
+    .ai-summary-header h3 { margin: 0; color: var(--primary-purple); font-size: 1.3rem; }
 
-    .ai-close-btn {
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      cursor: pointer;
-      color: #95a5a6;
-    }
+    .ai-close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #95a5a6; }
+    .ai-summary-box ul { margin: 0; padding-left: 20px; }
+    .ai-summary-box li { margin-bottom: 10px; line-height: 1.6; }
 
-    .ai-summary-box ul {
-      margin: 0;
-      padding-left: 20px;
-    }
+    .status-msg { text-align: center; font-size: 1.2rem; color: #7f8c8d; margin-top: 40px; }
 
-    .ai-summary-box li {
-      margin-bottom: 10px;
-      line-height: 1.6;
-    }
+    .news-grid { display: flex; gap: 20px; width: 100%; }
+    .column { flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
-    /* Status Message */
-    .status-msg {
-      text-align: center;
-      font-size: 1.2rem;
-      color: #7f8c8d;
-      margin-top: 40px;
-    }
-
-    /* 3-Column Masonry Grid */
-    .news-grid {
-      display: flex;
-      gap: 20px;
-      width: 100%;
-    }
-
-    .column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    /* Post Cards */
     .post-card {
       background: var(--card-bg);
       border-radius: 16px;
@@ -213,30 +162,10 @@
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .post-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-    }
-
-    .post-image {
-      width: 100%;
-      height: auto;
-      max-height: 250px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .post-content {
-      padding: 20px;
-      flex-grow: 1;
-    }
-
-    .post-content p {
-      margin: 0;
-      line-height: 1.5;
-      font-size: 0.95rem;
-      color: #444;
-    }
+    .post-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    .post-image { width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block; }
+    .post-content { padding: 20px; flex-grow: 1; }
+    .post-content p { margin: 0; line-height: 1.5; font-size: 0.95rem; color: #444; }
 
     .post-author {
       padding: 15px 20px;
@@ -249,9 +178,7 @@
       background: #fafafa;
     }
 
-    @media (max-width: 900px) {
-      .news-grid { flex-direction: column; }
-    }
+    @media (max-width: 900px) { .news-grid { flex-direction: column; } }
   </style>
   
   <div id="google_translate_element" style="display:none;"></div>
@@ -283,7 +210,6 @@
     </div>
 
     <div id="ai-summary-box" class="ai-summary-box"></div>
-
     <div id="status-msg" class="status-msg">Loading dashboard updates...</div>
 
     <div class="news-grid">
@@ -294,12 +220,13 @@
   </div>
 
   <script>
-    // Master data sync links mapping
-    const MAIN_FEED_ID = "_fSzIxvtfekt0QkYy";
+    // System Endpoint Configurations
+    const CLOUDFLARE_SUMMARIZER_URL = "https://mayor-ai-briefing.aedwards-5db.workers.dev";
+    const GITHUB_RAW_DATA_URL = "https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/main/mayor_news.json";
 
     const FEED_MAP = {
-      "Highlights": "LOCAL_FILE",
-      "All News": "LOCAL_FILE",
+      "Highlights": "GITHUB_DATA",
+      "All News": "GITHUB_DATA",
       "Innovation": "_0ADB6njzx3sw9LyS", 
       "City Social Media": "_KxzixUygzbdzu5KA",
       "City Updates": "LTs3Zw710ixkkYP7",
@@ -324,7 +251,7 @@
     ];
 
     let dropdownInitialized = false;
-    let cachedBriefingHTML = "No summary has been generated for this cycle yet.";
+    let visibleItemsOnPage = []; // Array tracking whatever posts are actively shown on screen
 
     function toggleLanguage() {
       const isSpanish = document.getElementById('langToggle').checked;
@@ -339,34 +266,64 @@
       document.getElementById('ai-summary-box').style.display = 'none';
     }
 
-    function fetchAISummary() {
+    // ON-DEMAND LIVE BRIEFING GENERATOR (Talks to your lean Cloudflare Worker)
+    async function fetchAISummary() {
       const summaryBox = document.getElementById('ai-summary-box');
-      if (!summaryBox) return;
+      if (!summaryBox || visibleItemsOnPage.length === 0) return;
       
-      const headerHTML = `
-        <div class="ai-summary-header">
-          <h3>✨ AI Feed Summary</h3>
-          <button class="ai-close-btn" onclick="closeAISummary()" title="Close Briefing">✖</button>
-        </div>
-      `;
-      summaryBox.innerHTML = `${headerHTML}<div>${cachedBriefingHTML}</div>`;
       summaryBox.style.display = "block";
+      summaryBox.innerHTML = `
+        <div class="ai-summary-header">
+          <h3>✨ Analyzing Current Screen Content...</h3>
+          <button class="ai-close-btn" onclick="closeAISummary()">✖</button>
+        </div>
+        <div style="color: #7f8c8d; font-style: italic; padding: 10px 0;">Chief of Staff is drafting your executive brief...</div>
+      `;
+
+      // Extract details from the top 12 posts currently loaded on screen
+      const textToSummarize = visibleItemsOnPage.slice(0, 12).map(item => {
+        const source = (item.authors && item.authors[0]) ? item.authors[0].name : "City Update";
+        return `Source: ${source}\nTitle: ${item.title}\nDetails: ${item.content_text || ""}`;
+      }).join("\n\n");
+
+      try {
+        const response = await fetch(`${CLOUDFLARE_SUMMARIZER_URL}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newsData: textToSummarize })
+        });
+        
+        const data = await response.json();
+        summaryBox.innerHTML = `
+          <div class="ai-summary-header">
+            <h3>✨ AI Feed Summary</h3>
+            <button class="ai-close-btn" onclick="closeAISummary()">✖</button>
+          </div>
+          <div>${data.summary || "Unable to parse text metrics for this view."}</div>
+        `;
+      } catch (err) {
+        console.error("Briefing request failed:", err);
+        summaryBox.innerHTML = `
+          <div class="ai-summary-header">
+            <h3>✨ Connection Glitch</h3>
+            <button class="ai-close-btn" onclick="closeAISummary()">✖</button>
+          </div>
+          <div style="color:red;">Error connecting to Cloudflare AI engine. Please click again.</div>
+        `;
+      }
     }
 
     async function loadNews(selectedAuthor = "Highlights") {
       const status = document.getElementById('status-msg');
-      const feedId = FEED_MAP[selectedAuthor] || "LOCAL_FILE";
+      const feedTarget = FEED_MAP[selectedAuthor] || "GITHUB_DATA";
       
       const aiBox = document.getElementById('ai-summary-box');
       if (aiBox) aiBox.style.display = "none";
 
-      let fetchUrl = "";
-      if (feedId === "LOCAL_FILE") {
-        // CASE-SENSITIVE PATH INTEGRATION LINK
-        fetchUrl = `https://raw.githubusercontent.com/aedwards-bot/Mayor-Feed/main/mayor_news.json`;
-      } else {
-        fetchUrl = `https://rss.app/feeds/v1.1/${feedId}.json`;
-      }
+      // Route mapping depending on what tab is selected
+      const fetchUrl = (feedTarget === "GITHUB_DATA") 
+        ? GITHUB_RAW_DATA_URL 
+        : `https://rss.app/feeds/v1.1/${feedTarget}.json`;
 
       try {
         if (status) {
@@ -375,27 +332,19 @@
         }
         
         const response = await fetch(fetchUrl);
-        
-        if (!response.ok) {
-          throw new Error(`Server returned error code status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Server returned error status: ${response.status}`);
         
         const data = await response.json();
-        let rawItems = [];
-
-        if (feedId === "LOCAL_FILE") {
-          rawItems = data.items || [];
-          cachedBriefingHTML = data.summary || "No summary available for this cycle.";
-        } else {
-          rawItems = data.items || [];
-          cachedBriefingHTML = "AI summary metrics are currently optimized for the primary Highlights workspace tab.";
-        }
+        
+        // Python nested dictionary handling vs standard RSSapp list mapping
+        const rawItems = data.items || [];
 
         if (rawItems.length === 0) {
           if (status) status.innerText = "No announcements found.";
           return;
         }
 
+        // Chronological order verification mapping
         rawItems.sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
 
         if (!dropdownInitialized) {
@@ -407,7 +356,7 @@
       } catch (err) {
         console.error("Dashboard Sync Error Details:", err);
         if (status) {
-          status.innerHTML = `<div style="color:red;">Error syncing latest updates. Please refresh the browser.</div>`;
+          status.innerHTML = `<div style="color:red;">Error loading news profile data. Please refresh.</div>`;
         }
       }
     }
@@ -427,18 +376,21 @@
 
     function distributePosts(posts, activeFilter) {
       const cols = [document.getElementById('col-1'), document.getElementById('col-2'), document.getElementById('col-3')];
-      
-      // Verification backup to prevent crashes if columns are physically unrendered
       if (!cols[0] || !cols[1] || !cols[2]) return;
       
       cols.forEach(c => c.innerHTML = "");
+      visibleItemsOnPage = []; // Clear current tracking array
 
       let visibleCount = 0;
       posts.forEach((post) => {
         
+        // If viewing 'Highlights' tab, filter out anything not tagged by your GitHub script
         if (activeFilter === "Highlights" && post.is_highlight !== 1) {
           return;
         }
+
+        // Log to dynamic summary builder cache array
+        visibleItemsOnPage.push(post);
 
         let imageSrc = post.image || post.thumbnail;
         if (!imageSrc && post.attachments && post.attachments[0]) imageSrc = post.attachments[0].url;
@@ -484,10 +436,8 @@
       });
     }
 
-    // Default entry loading parameter invocation
+    // Default initialization page invocation targeting Highlights on startup
     loadNews("Highlights");
   </script>
 </body>
 </html>
-
-```
